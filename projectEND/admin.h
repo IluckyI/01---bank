@@ -6,7 +6,7 @@
 #define __ADMIN_CPP__
 
 
-int  enterChoice(void);
+char  enterChoice(void);
 void deleteRecord(FILE *);
 void outputInfo(FILE*);
 char * enternum(void);

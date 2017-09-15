@@ -9,8 +9,8 @@
 void outputRecord(UserPtr);
 void userUpdateRecord(FILE*file, UserPtr user);
 int enterUserAcc(void);
-int enterUser(void);
+char enterUser(void);
 
-void Userchoice(void);
+void Userchoice(UserData client[100]);
 
 #endif

@@ -15,14 +15,14 @@ enum OperatorType
 
 enum loginname
 {
-	ADMIN = 1,
+	ADMIN = '1',
 	USER,
 	LOGEXIT,
 };
 
 enum adminexe
 {
-	ADMWRITE = 1,
+	ADMWRITE = '1',
 	ADMUPDATE,
 	ADMNEW,
 	ADMDELETE,
@@ -32,7 +32,7 @@ enum adminexe
 };
 enum Userexe
 {
-	USERWRITE = 1,
+	USERWRITE = '1',
 	USERUPDATE,
 	USEROUTPUT,
 	USERFIND,
@@ -60,7 +60,7 @@ typedef struct _User   //用户结构体
 void findRecord(FILE*, int);
 int	 updateData(OperatorType type, UserData* data);
 int enterPassword(void);
-int enterlogin(void);
+char enterlogin(void);
 void textFile(FILE *);
 void updateRecord(FILE *);
 void initialize(FILE *);
