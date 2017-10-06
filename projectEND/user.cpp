@@ -48,7 +48,7 @@ char enterUser(void)     //用户选项
 	printf( "\t\t                  ***************************\n"
 			"\t\t                  *     Enter your choice   *\n"
 			"\t\t                  * 1 - save information    *\n"
-			"\t\t                  * 2 - update information  *\n"
+			"\t\t                  * 2 - update password     *\n"
 			"\t\t                  * 3 - output information  *\n"
 			"\t\t                  * 4 - find acctnum info   *\n"
 			"\t\t                  * 5 - end program?        *\n"

@@ -109,31 +109,46 @@ void textFile(FILE *readPtr)
 //	printf("\t\t\t---------------------------------------------------\n");
 //}
 
-void findRecord(FILE*file, int acctNum)  //用户查询其他用户的标准信息（即姓名，账号，余额）
-{
-	UserPtr data = (UserPtr)malloc(sizeof(UserData));
-	fseek(file, 0, SEEK_SET);
-
-	while (!feof(file))
-	{
-		fread(data, sizeof(UserData), 1, file);
-		if (data->acctNum == acctNum)
-		{
-			printf("\t\t\t\t%-6s  %-16s%10s\n", "acctnum", "name", "balance");
-			printf("\t\t\t\t%-6d  %-16s%10.2lf\n", data->acctNum, data->name, data->balance);
-			free(data);
-			data = 0;
-			printf("\t\t\t---------------------------------------------------\n");
-			return;
-		}
-		//		fseek(file, sizeof(UserData), SEEK_CUR);
-
-	}
-	printf("\t\t\t\tDon't have this acctNum!\n");
-	free(data);
-	data = 0;
-	printf("\t\t\t---------------------------------------------------\n");
-}
+//void findRecord(FILE*file, int acctNum)  //用户查询其他用户的标准信息（即姓名，账号，余额）
+//{
+//	if (mysql_query(con, "SELECT img FROM cars WHERE acctNum=''"))
+//	{
+//		finish_with_error(con);
+//	}
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//	//UserPtr data = (UserPtr)malloc(sizeof(UserData));
+//	//fseek(file, 0, SEEK_SET);
+//
+//	//while (!feof(file))
+//	//{
+//	//	fread(data, sizeof(UserData), 1, file);
+//	//	if (data->acctNum == acctNum)
+//	//	{
+//	//		printf("\t\t\t\t%-6s  %-16s%10s\n", "acctnum", "name", "balance");
+//	//		printf("\t\t\t\t%-6d  %-16s%10.2lf\n", data->acctNum, data->name, data->balance);
+//	//		free(data);
+//	//		data = 0;
+//	//		printf("\t\t\t---------------------------------------------------\n");
+//	//		return;
+//	//	}
+//	//	//		fseek(file, sizeof(UserData), SEEK_CUR);
+//
+//	//}
+//	//printf("\t\t\t\tDon't have this acctNum!\n");
+//	//free(data);
+//	//data = 0;
+//	printf("\t\t\t---------------------------------------------------\n");
+//}
 
 
 

@@ -1,15 +1,46 @@
-#pragma once
+
 #define _CRT_SECURE_NO_WARNINGS
+//#include <my_global.h>
+//#include <mysql.h>
 #include<cstdio>
 #include"admin.h"
 #include"general.h"
 #include"user.h"
-
+MYSQL *con = 0;
 static FILE *admfPtr = 0;
 static FILE *cfPtr = 0;
 static UserData ss_clients[100] = { 0 };
 void txt_write();
+void Read_Saved_information();
+void finish_with_error(MYSQL *con)
+{
+	fprintf(stderr, "%s\n", mysql_error(con));
+	mysql_close(con);
+	exit(1);
+}
 
+
+void mysql_con(char **argv)
+{
+	
+	if(con)
+		finish_with_error(con);
+	con = mysql_init(NULL);
+	if (con == NULL)
+	{
+		fprintf(stderr, "mysql_init() failed\n");
+		exit(1);
+	}
+	if (mysql_real_connect(con, "127.0.0.1", "root", "root",
+		"bank", 0, NULL, 0) == NULL)
+	{
+		finish_with_error(con);
+	}
+	if (mysql_query(con, "create table if not exists bank(acctNum INT,Name TEXT,Password INT,Balance DOUBLE)"))
+	{
+		finish_with_error(con);
+	}
+}
 void buff_1(FILE *file)
 {
 	fseek(file, 0, SEEK_SET);
@@ -27,6 +58,7 @@ void userUpdateRecord(FILE*file, UserPtr user)//   用户修改密码
 {
 	getchar();
 	char a = 0;
+	char c[100] = { 0 };
 	printf("\t\t\t\t change your password?(Y/N):");
 	scanf("%c", &a);
 	if (a == 'N' || a == 'n')
@@ -46,13 +78,18 @@ void userUpdateRecord(FILE*file, UserPtr user)//   用户修改密码
 		SEEK_SET);
 	fwrite(&ss_clients[index], sizeof(UserData), 1,
 		cfPtr);//更新文件
-
+	sprintf(c, "update bank set Password='%d'where acctNum='%d'", 
+		ss_clients[index].password, ss_clients[index].acctNum);
+	if (mysql_query(con, c))
+	{
+		finish_with_error(con);
+	}
 			   //	updateData(UPDATE, user);//
 }
 void updateRecord(FILE *fPtr)           //管理员数据更新函数
 {
 	int account;
-
+	char c[100] = { 0 };
 	printf("\t\t\t---------------------------------------------------\n");
 	printf("\t\t\t\tEnter account to update : ");
 	scanf("%d", &account);
@@ -73,9 +110,9 @@ void updateRecord(FILE *fPtr)           //管理员数据更新函数
 	printf("\t\t\t\tEnter charge ( + ) or payment ( - ): ");
 	double transaction;
 	scanf("%lf", &transaction);
-	if (transaction > data.balance)
+	if (transaction < -data.balance)
 	{
-		printf("not enough money!");
+		printf("\t\t\t\tnot enough money!\n");
 		return;
 
 	}
@@ -85,7 +122,14 @@ void updateRecord(FILE *fPtr)           //管理员数据更新函数
 		data.balance);
 
 	updateData(UPDATE, &data);
+
+	sprintf(c,"update bank set balance='%lf'where acctNum='%d'",data.balance,data.acctNum );
+	if (mysql_query(con, c))
+	{
+		finish_with_error(con);
+	}
 	printf("\t\t\t---------------------------------------------------\n");
+
 }
 
 int recordIndex(int account)
@@ -158,8 +202,9 @@ int updateData(OperatorType type, UserData * data)
 	return 0;
 }
 
-int main()
+int main(char **argv)
 {
+	mysql_con(argv);
 
 	admin *adminacc = 0;
 	adminacc = (adminPtr)malloc(sizeof(admin));
@@ -199,7 +244,8 @@ int main()
 		return -1;
 	}
 
-	buff_1(cfPtr);
+	//buff_1(cfPtr);
+	Read_Saved_information();
 
 	initialize(cfPtr);
 	fclose(cfPtr);
@@ -220,7 +266,7 @@ int main()
 		{
 			cfPtr = fopen(FILE_PATH, "r+");//应改为r+
 			initialize(cfPtr);
-			admchoice(cfPtr, adminacc);
+			admChoice(cfPtr, adminacc);
 			txt_write();
 			break;
 		}
@@ -262,4 +308,183 @@ void txt_write()
 	}
 
 
+}
+
+void Read_Saved_information()
+{
+	if (mysql_query(con, "SELECT * FROM bank "))
+	{
+		finish_with_error(con);
+	}
+
+	MYSQL_RES *result = mysql_store_result(con);
+
+	if (result == NULL)
+	{
+		finish_with_error(con);
+	}
+
+	int num_fields = mysql_num_fields(result);//获取列个数
+
+	MYSQL_ROW row;
+	MYSQL_FIELD *field;
+	int i = 0;
+	while ((row = mysql_fetch_row(result)))//读一行
+	{
+
+		ss_clients[i].acctNum = atoi(row[0]);
+		strcpy(ss_clients[i].name, row[1]);
+		ss_clients[i].password = atoi(row[2]);
+		ss_clients[i].balance = atof(row[3]);
+		i++;
+	}
+	mysql_free_result(result);
+
+
+
+}
+
+void outputInfo()    //管理员输出所有账户信息（密码除外）
+{
+	if (mysql_query(con, "SELECT * FROM bank "))
+	{
+		finish_with_error(con);
+	}
+
+	MYSQL_RES *result = mysql_store_result(con);
+
+	if (result == NULL)
+	{
+		finish_with_error(con);
+	}
+
+	int num_fields = mysql_num_fields(result);//获取列个数
+
+	MYSQL_ROW row;
+	MYSQL_FIELD *field;
+	int i = 0;
+	printf("\t\t\t\t%-10s%-10s%-10s\n", "acctnum", "name", "balance");
+	while ((row = mysql_fetch_row(result)))
+	{
+		printf("\t\t\t\t");
+		for (int i = 0; i < num_fields; i++)
+		{
+			if (i == 2)
+				continue;
+			printf("%-10s ", row[i] ? row[i] : "NULL");
+		}
+		printf("\n");
+	}
+	mysql_free_result(result);
+	mysql_close(con);
+
+
+	//printf("\t\t\t\t%-6s  %-16s%10s\n", "acctnum", "name", "balance");
+	//int i = 0;
+	//for (; i<100; i++)
+	//{
+	//	if (ss_clients[i].acctNum == 0)
+	//		continue;
+	//	printf("\t\t\t\t%-6d  %-16s%10.2lf\n", ss_clients[i].acctNum, ss_clients[i].name, ss_clients[i].balance);
+	//}
+}
+
+void newRecord(FILE *fPtr)
+{
+	UserData client = { 0, 0, "", 0.0 };
+	int accountNum;
+	char c[100] = { 0 };
+	printf("\t\t\tEnter new account number : ");
+	scanf("%s", c);
+
+	int size = 0;
+	size = strlen(c);
+	for (int i = 0; i < size&&c[i] != '\n'; i++)
+	{
+		if (c[i] < '0' || c[i] > '9')
+		{
+			printf("\t\t\t\tinput error!!!!!\n");
+			printf("\t\t\t\tPlease input number !!!\n");
+			return;
+		}
+	}
+	accountNum = atoi(c);
+
+	//找到该记录在列表中的索引
+	int index = recordIndex(accountNum);
+	if (-1 != index)//如果该记录已经存在
+	{
+		printf("\t\t\tAccount  already contains information.\n");
+		printf("\t\t\t---------------------------------------------------\n");
+		return;
+	}
+	printf("\t\t\tEnter password,name, balance\n ");
+	printf("\t\t\t      ?");
+	scanf("%d%s%lf", &client.password, client.name,
+		&client.balance);
+	client.acctNum = accountNum;
+
+	updateData(INSERT, &client);
+	sprintf(c,"INSERT INTO bank VALUES(%d, '%s', '%d','%lf')",
+		client.acctNum,client.name,client.password,client.balance);
+
+	if (mysql_query(con, c)) {
+		finish_with_error(con);
+	}
+
+	printf("\t\t\t\t   newrecord successful!\n");
+	printf("\t\t\t---------------------------------------------------\n");
+}
+
+void deleteRecord(FILE *fPtr)      //管理员的删除
+{
+	int accountNum;
+	char c[50] = { 0 };
+	printf("\t\t\tEnter account number to "
+		"delete: ");
+	scanf("%d", &accountNum);
+
+	UserData 	blankClient = { INVALID_ACCOUNT_NO, 0, "", 0 };
+	blankClient.acctNum = accountNum;
+	if (updateData(Delect, &blankClient) == -1)
+		return;
+
+	sprintf(c, "delete from bank where acctNum='%d'",accountNum);
+	if (mysql_query(con, c)) 
+	{
+		finish_with_error(con);
+	}
+
+	printf("\t\t\tdelete record successful!\n");
+
+}
+
+void findRecord(FILE*file, int acctNum)  //用户查询其他用户的标准信息（即姓名，账号，余额）
+{
+	char c[50] = { 0 };
+	UserData Data;
+	sprintf(c, "SELECT *FROM bank WHERE acctNum = '%d'", acctNum);
+	if (mysql_query(con, c))
+	{
+		finish_with_error(con);
+	}
+	MYSQL_RES *result = mysql_store_result(con);
+	if (result->row_count == 0)
+	{
+		printf("\t\t\t#%d no exist!\n",acctNum);
+		return;
+	}
+	if (result == NULL)
+	{
+		finish_with_error(con);
+	}
+	MYSQL_ROW row = mysql_fetch_row(result);
+	Data.acctNum = atoi(row[0]);
+	strcpy(Data.name, row[1]);
+	Data.password = atoi(row[2]);
+	Data.balance = atof(row[3]);
+	printf("\t\t\t\t%-6s  %-16s%10s\n", "acctnum", "name", "balance");
+	printf("\t\t\t\t%-6d  %-16s%10.2lf\n", Data.acctNum, Data.name, Data.balance);
+
+	printf("\t\t\t---------------------------------------------------\n");
 }

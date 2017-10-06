@@ -3,13 +3,15 @@
 #include<cstdlib>
 #include <cstdbool>
 #include <cstring>
+#include <my_global.h>
+#include <mysql.h>
 #define _CRT_SECURE_NO_WARNINGS
 #ifndef __GENERAL_CPP__
 #define __GENERAL_CPP__
 enum OperatorType
 {
 	INSERT,
-	DELETE,
+	Delect,
 	UPDATE,
 };
 

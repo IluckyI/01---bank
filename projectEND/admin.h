@@ -8,10 +8,10 @@
 
 char  enterChoice(void);
 void deleteRecord(FILE *);
-void outputInfo(FILE*);
-char * enternum(void);
+void outputInfo();
+char * enterNum(void);
 void newRecord(FILE *);
-void admchoice(FILE*cfPtr, admin * adminacc);
+void admChoice(FILE*cfPtr, admin * adminacc);
 
 
 #endif
